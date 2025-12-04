@@ -24,40 +24,37 @@
     .then(response => response.text())
     .then(csv => {
       const rows = csv.split("\n").map(r => r.split(","));
-      
+
       // Extract header names
       const headers = rows[0];
-      
+
       // Identify column indexes based on normalized labels
       const idxName = headers.findIndex(h => h.toLowerCase().includes("property name"));
       const idxAddress = headers.findIndex(h => h.toLowerCase().includes("address"));
       const idxManager = headers.findIndex(h => h.toLowerCase().includes("assigned manager"));
       const idxEmail = headers.findIndex(h => h.toLowerCase().includes("email"));
       const idxHandles = headers.findIndex(h => h.toLowerCase().includes("handles"));
-      
+
       let html = "";
 
-      // Process each row as an XML block
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
-
         if (row.join("").trim() === "") continue;
 
-        // Merge Handles column (Option H1)
-        const cleanHandles = row[idxHandles]
+        // Clean Handles (H1 option)
+        const cleanHandles = (row[idxHandles] || "")
           .replace(/\r?\n|\r/g, " ")
           .replace(/,+/g, ", ")
           .trim();
 
         html += `
-<Property>
-Name: ${row[idxName] || ""}
-Address: ${row[idxAddress] || ""}
-Manager: ${row[idxManager] || ""}
-Email: ${row[idxEmail] || ""}
-Handles: ${cleanHandles}
-</Property>
-<br><br>
+<Property><br>
+Name: ${row[idxName] || ""}<br>
+Address: ${row[idxAddress] || ""}<br>
+Manager: ${row[idxManager] || ""}<br>
+Email: ${row[idxEmail] || ""}<br>
+Handles: ${cleanHandles}<br>
+</Property><br><br>
         `;
       }
 
