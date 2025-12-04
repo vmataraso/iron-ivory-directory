@@ -16,30 +16,57 @@
 
   <div id="table-container">Loading...</div>
 
-  <script>
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQN-HyD_xL7wseQE98-OGlyG7pxnC6FCOITOrBkb0uAoGYBDZPQetginAMafuOtSA6MUct_lEuKpaTG/pub?gid=964797632&single=true&output=csv";
+<script>
+  const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQN-HyD_xL7wseQE98-OGlyG7pxnC6FCOITOrBkb0uAoGYBDZPQetginAMafuOtSA6MUct_lEuKpaTG/pub?gid=964797632&single=true&output=csv";
 
-    fetch(sheetUrl)
-      .then(response => response.text())
-      .then(csv => {
-        const rows = csv.split("\n").map(r => r.split(","));
-        let html = "<table>";
-        rows.forEach((row, index) => {
-          html += "<tr>";
-          row.forEach(cell => {
-            html += (index === 0)
-              ? `<th>${cell}</th>`
-              : `<td>${cell}</td>`;
-          });
-          html += "</tr>";
-        });
-        html += "</table>";
-        document.getElementById("table-container").innerHTML = html;
-      })
-      .catch(err => {
-        document.getElementById("table-container").innerHTML = "Error loading data.";
-      });
-  </script>
+  fetch(sheetUrl)
+    .then(response => response.text())
+    .then(csv => {
+      const rows = csv.split("\n").map(r => r.split(","));
+      
+      // Extract header names
+      const headers = rows[0];
+      
+      // Identify column indexes based on normalized labels
+      const idxName = headers.findIndex(h => h.toLowerCase().includes("property name"));
+      const idxAddress = headers.findIndex(h => h.toLowerCase().includes("address"));
+      const idxManager = headers.findIndex(h => h.toLowerCase().includes("assigned manager"));
+      const idxEmail = headers.findIndex(h => h.toLowerCase().includes("email"));
+      const idxHandles = headers.findIndex(h => h.toLowerCase().includes("handles"));
+      
+      let html = "";
+
+      // Process each row as an XML block
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+
+        if (row.join("").trim() === "") continue;
+
+        // Merge Handles column (Option H1)
+        const cleanHandles = row[idxHandles]
+          .replace(/\r?\n|\r/g, " ")
+          .replace(/,+/g, ", ")
+          .trim();
+
+        html += `
+<Property>
+Name: ${row[idxName] || ""}
+Address: ${row[idxAddress] || ""}
+Manager: ${row[idxManager] || ""}
+Email: ${row[idxEmail] || ""}
+Handles: ${cleanHandles}
+</Property>
+<br><br>
+        `;
+      }
+
+      document.getElementById("table-container").innerHTML = html;
+    })
+    .catch(err => {
+      document.getElementById("table-container").innerHTML = "Error loading data.";
+    });
+</script>
+
 
 </body>
 </html>
