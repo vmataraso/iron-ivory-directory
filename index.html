@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Iron & Ivory Property Directory</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    table, th, td { border: 1px solid #999; }
+    th, td { padding: 8px; text-align: left; }
+    h1 { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Iron & Ivory Property Directory</h1>
+
+  <div id="table-container">Loading...</div>
+
+  <script>
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQN-HyD_xL7wseQE98-OGlyG7pxnC6FCOITOrBkb0uAoGYBDZPQetginAMafuOtSA6MUct_lEuKpaTG/pub?gid=964797632&single=true&output=csv";
+
+    fetch(sheetUrl)
+      .then(response => response.text())
+      .then(csv => {
+        const rows = csv.split("\n").map(r => r.split(","));
+        let html = "<table>";
+        rows.forEach((row, index) => {
+          html += "<tr>";
+          row.forEach(cell => {
+            html += (index === 0)
+              ? `<th>${cell}</th>`
+              : `<td>${cell}</td>`;
+          });
+          html += "</tr>";
+        });
+        html += "</table>";
+        document.getElementById("table-container").innerHTML = html;
+      })
+      .catch(err => {
+        document.getElementById("table-container").innerHTML = "Error loading data.";
+      });
+  </script>
+
+</body>
+</html>
