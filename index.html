@@ -7,27 +7,13 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
-
     h1 {
       margin-bottom: 20px;
     }
-
     .property {
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 14px 16px;
-      margin-bottom: 14px;
-      background: #fafafa;
-    }
-
-    .property-field {
-      margin: 2px 0;
-    }
-
-    .label {
-      font-weight: bold;
+      margin-bottom: 12px;
     }
   </style>
 </head>
@@ -107,10 +93,10 @@
 
         const headers = rows[0].map(h => normalize(h).toLowerCase());
 
-        const idxName = headers.findIndex(h => h.includes("property name"));
+        const idxName    = headers.findIndex(h => h.includes("property name"));
         const idxAddress = headers.findIndex(h => h.includes("property address") || h.includes("address"));
         const idxManager = headers.findIndex(h => h.includes("assigned manager"));
-        const idxEmail = headers.findIndex(h => h === "email" || h.includes("email"));
+        const idxEmail   = headers.findIndex(h => h === "email" || h.includes("email"));
         const idxHandles = headers.findIndex(h => h.includes("notes") || h.includes("handles"));
 
         let html = "";
@@ -119,19 +105,23 @@
           const row = rows[i];
           if (!row || row.every(cell => !String(cell).trim())) continue;
 
-          const name = normalize(row[idxName] || "");
+          const name    = normalize(row[idxName]    || "");
           const address = normalize(row[idxAddress] || "");
           const manager = normalize(row[idxManager] || "");
-          const email = normalize(row[idxEmail] || "");
+          const email   = normalize(row[idxEmail]   || "");
           const handles = normalize(row[idxHandles] || "");
+
+          if (!name) continue;
 
           html += `
             <div class="property">
-              <div class="property-field"><span class="label">Name:</span> ${escapeHtml(name)}</div>
-              <div class="property-field"><span class="label">Address:</span> ${escapeHtml(address)}</div>
-              <div class="property-field"><span class="label">Manager:</span> ${escapeHtml(manager)}</div>
-              <div class="property-field"><span class="label">Email:</span> ${escapeHtml(email)}</div>
-              <div class="property-field"><span class="label">Handles:</span> ${escapeHtml(handles)}</div>
+              <p>
+                <strong>Property Record:</strong> ${escapeHtml(name)} |
+                <strong>Address:</strong> ${escapeHtml(address)} |
+                <strong>Assigned Manager:</strong> ${escapeHtml(manager)} |
+                <strong>Email:</strong> ${escapeHtml(email)} |
+                <strong>Handles:</strong> ${escapeHtml(handles)}
+              </p>
             </div>
           `;
         }
