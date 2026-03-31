@@ -7,18 +7,14 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      line-height: 1.6;
+      line-height: 1.8;
     }
-    h1 {
-      margin-bottom: 20px;
-    }
-    .property {
-      margin-bottom: 12px;
-    }
+    h1 { margin-bottom: 20px; }
+    .property { margin-bottom: 16px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
   </style>
 </head>
 <body>
-  <h1>Iron & Ivory Property Directory</h1>
+  <h1>Iron &amp; Ivory Property Directory</h1>
   <div id="table-container">Loading...</div>
 
   <script>
@@ -35,12 +31,8 @@
         const next = text[i + 1];
 
         if (char === '"') {
-          if (inQuotes && next === '"') {
-            current += '"';
-            i++;
-          } else {
-            inQuotes = !inQuotes;
-          }
+          if (inQuotes && next === '"') { current += '"'; i++; }
+          else { inQuotes = !inQuotes; }
         } else if (char === "," && !inQuotes) {
           row.push(current.trim());
           current = "";
@@ -56,47 +48,37 @@
           current += char;
         }
       }
-
       if (current.length > 0 || row.length > 0) {
         row.push(current.trim());
         rows.push(row);
       }
-
       return rows;
     }
 
-    function escapeHtml(value) {
-      return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
+    function clean(value) {
+      return String(value || "").replace(/\s+/g, " ").replace(/^"+|"+$/g, "").trim();
     }
 
-    function normalize(value) {
+    function esc(value) {
       return String(value || "")
-        .replace(/\s+/g, " ")
-        .replace(/^"+|"+$/g, "")
-        .trim();
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
     fetch(sheetUrl)
-      .then(response => response.text())
+      .then(r => r.text())
       .then(csv => {
         const rows = parseCSV(csv);
-
         if (!rows.length) {
           document.getElementById("table-container").innerHTML = "No data found.";
           return;
         }
 
-        const headers = rows[0].map(h => normalize(h).toLowerCase());
-
+        const headers = rows[0].map(h => clean(h).toLowerCase());
         const idxName    = headers.findIndex(h => h.includes("property name"));
-        const idxAddress = headers.findIndex(h => h.includes("property address") || h.includes("address"));
+        const idxAddress = headers.findIndex(h => h.includes("address"));
         const idxManager = headers.findIndex(h => h.includes("assigned manager"));
-        const idxEmail   = headers.findIndex(h => h === "email" || h.includes("email"));
+        const idxEmail   = headers.findIndex(h => h.includes("email"));
         const idxHandles = headers.findIndex(h => h.includes("notes") || h.includes("handles"));
 
         let html = "";
@@ -105,32 +87,31 @@
           const row = rows[i];
           if (!row || row.every(cell => !String(cell).trim())) continue;
 
-          const name    = normalize(row[idxName]    || "");
-          const address = normalize(row[idxAddress] || "");
-          const manager = normalize(row[idxManager] || "");
-          const email   = normalize(row[idxEmail]   || "");
-          const handles = normalize(row[idxHandles] || "");
+          const name    = clean(row[idxName]    || "");
+          const address = clean(row[idxAddress] || "");
+          const manager = clean(row[idxManager] || "");
+          const email   = clean(row[idxEmail]   || "");
+          const handles = clean(row[idxHandles] || "");
 
           if (!name) continue;
 
+          // Property name is embedded in every sentence so GHL cannot
+          // deduplicate records that share the same manager/email/handles.
           html += `
             <div class="property">
-              <p>
-                <strong>Property Record:</strong> ${escapeHtml(name)} |
-                <strong>Address:</strong> ${escapeHtml(address)} |
-                <strong>Assigned Manager:</strong> ${escapeHtml(manager)} |
-                <strong>Email:</strong> ${escapeHtml(email)} |
-                <strong>Handles:</strong> ${escapeHtml(handles)}
-              </p>
+              <p>${esc(name)} is located at ${esc(address)}.</p>
+              <p>The assigned manager for ${esc(name)} is ${esc(manager)}.</p>
+              <p>The contact email for ${esc(name)} is ${esc(email)}.</p>
+              <p>${esc(name)} handles: ${esc(handles)}.</p>
             </div>
           `;
         }
 
-        document.getElementById("table-container").innerHTML = html || "No property records found.";
+        document.getElementById("table-container").innerHTML = html || "No records found.";
       })
-      .catch(error => {
+      .catch(err => {
         document.getElementById("table-container").innerHTML = "Error loading data.";
-        console.error(error);
+        console.error(err);
       });
   </script>
 </body>
